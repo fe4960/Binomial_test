@@ -14,7 +14,7 @@ print OUTPUT "#$pt_freq\n";
 print OUTPUT1 "#$pt_freq\n";
 
 my @size = (10,20,40,80,100,120,200,250,300,400,500,600,700,800,900,1000);
-my @dis_freq = (0.005,0.001,0.0005,0.0002, 0.0001);
+my @dis_freq = (0.005,0.001,0.0005);
 
 print OUTPUT "dis_freq\t";
 print OUTPUT1 "dis_freq\t";

@@ -12,7 +12,7 @@ print OUTPUT1 "#$pt_freq\n";
 my $R_comd = "R-3.5.0/bin/R";
 
 my @size = (10,20,40,80,100,120,200,250,300,400,500,600,700,800,900,1000);
-my @dis_freq = (0.0002, 0.0001, 0.00005,0.00001);
+my @dis_freq = (0.0002, 0.0001, 0.00005);
 
 print OUTPUT "dis_freq\t";
 print OUTPUT1 "dis_freq\t";
