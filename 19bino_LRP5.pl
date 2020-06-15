@@ -1,12 +1,12 @@
 #!/usr/bin/perl -w
 use strict;
 use Math::Complex;
-my $main = "/home/";
+my $main = "/storage/chen/home/jw29";
 my $var_file = "HGMD/data/HGMD_2014_2016_LRP5";
 my $temp = "LRP5";
 my $freq_cut = 1;
-my $output = $var_file."_maxAF$freq_cut"."_bin_pt_dis0001_new"; #dis_freq = 0.0001
-my $R_comd = "R-3.5.0/bin/R";
+my $output = $var_file."_maxAF$freq_cut"."_bin_pt_dis0001_new_combi"; #dis_freq = 0.0001
+my $R_comd = "/storage/chen/Software/R-3.5.0/bin/R";
 my $disease_freq = 0.001;
 my $dis_freq = 1-sqrt(1-$disease_freq);
 
@@ -18,10 +18,12 @@ open(OUTPUT,">$output") || die ("$output");
 
 #print OUTPUT "chr\tpos\t.\tref\talt\tac\taf\tannotation\tpt_indo\tHGMD\tfisher_p_greater_max\tfisher_p_greater_all\tfisher_p_less_max\tfisher_p_less_all\tmax_freq\tmax_ac\tmax_an\tfreq\tac\tan\thom\tmax_hom\n";
 
-print OUTPUT "Var\tHGMD_ref\tAC_STGD\tAF_STGD\tAC_Max\tAF_Max\tAN_Max\tEAS_AC\tEAS_AF\tEAS_AN\tMax_bino_p_greater\tEAS_bino_p_greater\tMax_bino_p_less\tEAS_bino_p_less\tHom\tMax_fisher_p_less\tNfe_fisher_p_less\n";
+print OUTPUT "Var\tHGMD_ref\tAC_STGD\tAF_STGD\tAC_Max\tAF_Max\tAN_Max\tEAS_AC\tEAS_AF\tEAS_AN\tMax_bino_p_greater\tEAS_bino_p_greater\tMax_bino_p_less\tEAS_bino_p_less\tHom\tMax_bino_af_p_greater\tEAS_bino_af_p_greater\n";
 
 my $tabix  ="tabix";
-my $gnomad = "gnomad_pop_freq_new_sort.gz";
+my $gnomad = "/storage/chen/tmp/disease_gene/gnomad/gnomad_pop_freq_new_sort.gz";
+
+#my $gnomad = "gnomad_pop_freq_new_sort.gz";
 #my $gnomad = "$main/gnomad/data/gnomad_exomes_r2.0.1.sites_sort_5-26-2017.gz";
 #NO      1       13445   C       A       1       0.000315258511979823    DDX11L1|DDX11L1 nonsynonymous_SNV       RP:solved_RP:SRF_980
 #YES     1       1993722 C       T       2.0     0.00537634408602150538  PRKCZ   intron_variant  unsolved_LCA:1275:1/1:6:0:6:.
@@ -137,15 +139,27 @@ if($freq <=$dis_freq){
 $bin_p_less1 = bin_test($pt_freq1,$ac_STGD,$total,$direction);
 }
 
-my $STGD_rest = $total - $ac_STGD;
-my $max_rest = $max_an - $max_ac;
-my $fisher_p = fisher_test($ac_STGD,$STGD_rest,$max_ac, $max_rest,"less");
+#my $STGD_rest = $total - $ac_STGD;
+#my $max_rest = $max_an - $max_ac;
+#my $fisher_p = fisher_test($ac_STGD,$STGD_rest,$max_ac, $max_rest,"less");
 
-my $rest = $an - $ac;
-my $fisher_p1 = fisher_test($ac_STGD,$STGD_rest,$ac, $rest,"less");
+#my $rest = $an - $ac;
+#my $fisher_p1 = fisher_test($ac_STGD,$STGD_rest,$ac, $rest,"less");
+
+my $bin_p_greater = "NA";
+$direction = "greater";
+
+#if($max_freq <= $dis_freq){
+$bin_p_greater = bin_test($max_freq*2,$ac_STGD,$total,$direction);
+#}
+
+my $bin_p_greater1 = "NA";
+
+#if($freq <=$dis_freq){
+$bin_p_greater1 = bin_test($freq*2,$ac_STGD,$total,$direction);
 
 
-print OUTPUT "$line\t$ac_STGD\t$af_STGD\t$max_ac\t$max_freq\t$max_an\t$ac\t$freq\t$an\t$bin_p\t$bin_p1\t$bin_p_less\t$bin_p_less1\t$hom\t$fisher_p\t$fisher_p1\n";
+print OUTPUT "$line\t$ac_STGD\t$af_STGD\t$max_ac\t$max_freq\t$max_an\t$ac\t$freq\t$an\t$bin_p\t$bin_p1\t$bin_p_less\t$bin_p_less1\t$hom\t$bin_p_greater\t$bin_p_greater1\n";
 
 }
 

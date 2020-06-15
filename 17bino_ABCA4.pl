@@ -1,24 +1,26 @@
 #!/usr/bin/perl -w
 use strict;
-my $main = "/home/";
+my $main = "/storage/chen/home/jw29";
 my $var_file = "HGMD/data/HGMD_2014_2016_ABCA4_updated";
 
 my $temp = "ABCA4";
 my $freq_cut = 1;
-my $output = $var_file."_maxAF$freq_cut"."_bin"."_pt_new_0.01MAXAF_STGD157";
-my $STGD = "STGD/data/total_variant_wes_raw_summary_clean_maxAF0.01_AddTiling_ABCA_solved-8-5-2019_sorted.gz";
+my $output = $var_file."_maxAF$freq_cut"."_bin"."_pt_new_0.01MAXAF_STGD157_combi_new";
+#my $STGD = "STGD/data/total_variant_wes_raw_summary_clean_maxAF0.01_AddTiling_ABCA_solved-8-5-2019_sorted.gz";
+my $STGD = "STGD/data/total_variant_wes_raw_summary_clean_maxAF0.2_AddTiling_ABCA_solved-6-3-2020_sort.gz";
+
 my $total = 157*2;
 my $dis_freq = sqrt(1/10000*157/317);
-
+my $R = "/storage/chen/Software/R-3.5.0/bin/R";
 open(OUTPUT,">$output") || die ("$output");
 #1       94488103        .       T       C       3.0     0.00396825396825397     het:1|hom:1;ANN=C|intron_variant|MODIFIER|ABCA4|ABCA4|transcript|NM_000350.2|protein_coding|32/49|c.4668-596A>G||||||   FBP_144:1/1:5:0:5:.|RKK_374:0/1:4:1:5:.|        HGMD_None 
 
 #print OUTPUT "chr\tpos\t.\tref\talt\tac\taf\tannotation\tpt_indo\tHGMD\tfisher_p_greater_max\tfisher_p_greater_all\tfisher_p_less_max\tfisher_p_less_all\tmax_freq\tmax_ac\tmax_an\tfreq\tac\tan\thom\tmax_hom\n";
 
-print OUTPUT "Var\tHGMD_ref\tAC_STGD\tAF_STGD\tAC_Max\tAF_Max\tAN_Max\tNFE_AC\tNFE_AF\tNFE_AN\tMax_bino_p_greater\tNfe_bino_p_greater\tMax_bino_p_less\tNfe_bino_p_less\tHom\tMax_fisher_p_less\tNfe_fisher_p_less\n";
+print OUTPUT "Var\tHGMD_ref\tAC_STGD\tAF_STGD\tAC_Max\tAF_Max\tAN_Max\tNFE_AC\tNFE_AF\tNFE_AN\tMax_bino_p_greater\tNfe_bino_p_greater\tMax_bino_p_less\tNfe_bino_p_less\tHom\tMax_bino_af_p_greater\tNfe_bino_af_p_less\n";
 
 my $tabix  ="tabix";
-my $gnomad = "gnomad_pop_freq_new_sort.gz";
+my $gnomad = "/storage/chen/tmp/disease_gene/gnomad/gnomad_pop_freq_new_sort.gz";
 #my $gnomad = "$main/gnomad/data/gnomad_exomes_r2.0.1.sites_sort_5-26-2017.gz";
 #NO      1       13445   C       A       1       0.000315258511979823    DDX11L1|DDX11L1 nonsynonymous_SNV       RP:solved_RP:SRF_980
 #YES     1       1993722 C       T       2.0     0.00537634408602150538  PRKCZ   intron_variant  unsolved_LCA:1275:1/1:6:0:6:.
@@ -134,16 +136,28 @@ if($freq <=$dis_freq){
 $bin_p_less1 = bin_test($pt_freq1,$ac_STGD,$total,$direction);
 }
 
+my $bin_p_greater = "NA";
+$direction = "greater";
+
+#if($max_freq <= $dis_freq){
+$bin_p_greater = bin_test($max_freq,$ac_STGD,$total,$direction);
+#}
+
+my $bin_p_greater1 = "NA";
+
+#if($freq <=$dis_freq){
+$bin_p_greater1 = bin_test($freq,$ac_STGD,$total,$direction);
+#}
 
 my $STGD_rest = $total - $ac_STGD;
-my $max_rest = $max_an - $max_ac;
-my $fisher_p = fisher_test($ac_STGD,$STGD_rest,$max_ac, $max_rest,"less");
+#my $max_rest = $max_an - $max_ac;
+#my $fisher_p = fisher_test($ac_STGD,$STGD_rest,$max_ac, $max_rest,"less");
 
-my $rest = $an - $ac;
-my $fisher_p1 = fisher_test($ac_STGD,$STGD_rest,$ac, $rest,"less");
+#my $rest = $an - $ac;
+#my $fisher_p1 = fisher_test($ac_STGD,$STGD_rest,$ac, $rest,"less");
 
 
-print OUTPUT "$line\t$ac_STGD\t$af_STGD\t$max_ac\t$max_freq\t$max_an\t$ac\t$freq\t$an\t$bin_p\t$bin_p1\t$bin_p_less\t$bin_p_less1\t$hom\t$fisher_p\t$fisher_p1\n";
+print OUTPUT "$line\t$ac_STGD\t$af_STGD\t$max_ac\t$max_freq\t$max_an\t$ac\t$freq\t$an\t$bin_p\t$bin_p1\t$bin_p_less\t$bin_p_less1\t$hom\t$bin_p_greater\t$bin_p_greater1\n";
 
 }
 
@@ -157,7 +171,7 @@ open (OUTFILE, ">$R_script");
 print OUTFILE "pvalues<-binom.test(", "$_[1]",",$_[2]",", p= $_[0]",", alternative=\"$_[3]\" ,conf.level= 0.95)\$p\.value\n";
 print OUTFILE "write(pvalues\,\"$R_out\")\n";
 close OUTFILE;
-`R < $R_script --no-save --slave`;
+`$R < $R_script --no-save --slave`;
 open INFILE, "<$R_out";
 my $file = <INFILE>;
 my @results = split(/\s+/,$file);
@@ -174,7 +188,7 @@ open (OUTFILE, ">$R_script");
 print OUTFILE "pvalues<-pchisq(", "$_[0]",", df=", "$_[1]",", lower.tail = FALSE)\n";
 print OUTFILE "write(pvalues\,\"$R_out\")";
 close OUTFILE;
-`R < $R_script --no-save --slave`;
+`$R < $R_script --no-save --slave`;
 open INFILE, "<$R_out";
 my $file = <INFILE>;
 my @results = split(/\s+/,$file);
@@ -193,7 +207,7 @@ print OUTFILE	"Tea = matrix(c($_[0]\,$_[1]\,$_[2]\,$_[3])\,nrow=2\,dimnames =lis
 print OUTFILE	"pvalues<-fisher.test(Tea\, alternative=\"$_[4]\")\n";
 print OUTFILE "write(pvalues\$p\.value,(\"$R_out\"))\n";
 close OUTFILE;
-`R < $R_script --no-save --slave`;
+`$R < $R_script --no-save --slave`;
 open INFILE, "<$R_out";
 my $file = <INFILE>;
 my @results = split(/\s+/,$file);
